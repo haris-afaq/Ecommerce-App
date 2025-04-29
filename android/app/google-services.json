@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "602010539293",
+    "project_id": "easemart-934fb",
+    "storage_bucket": "easemart-934fb.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:602010539293:android:e686f98227b63f4670bdf4",
+        "android_client_info": {
+          "package_name": "com.example.untitled"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB86gsNUNc_eAlUcA4PxAumttED83GXwlE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
