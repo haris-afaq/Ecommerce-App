@@ -328,22 +328,26 @@ class ProductController extends GetxController {
     fetchFavoriteProducts(firebaseAuth.currentUser!.uid);
   }
 
-  void fetchProducts() {
-    isLoading.value = true;
-    firestore.collection('products').get().then((querySnapshot) {
+  Future<void> fetchProducts({bool setLoading = true}) async {
+    if (setLoading) {
+      isLoading.value = true;
+    }
+    try {
+      final querySnapshot = await firestore.collection('products').get();
       final products = querySnapshot.docs.map((doc) {
         final productData = doc.data();
-        final product = Product.fromMap(productData);
-
-        if (product.ownerId == firebaseAuth.currentUser!.uid) {
-          _myProducts.add(product);
-        }
-        return product;
+        return Product.fromMap(productData);
       }).toList();
 
-      _products.value = products;
-      isLoading.value = false;
-    });
+      _products.assignAll(products);
+      _myProducts.assignAll(
+        products.where((product) => product.ownerId == firebaseAuth.currentUser!.uid),
+      );
+    } finally {
+      if (setLoading) {
+        isLoading.value = false;
+      }
+    }
   }
 
   void toggleLoading() {
@@ -396,11 +400,6 @@ class ProductController extends GetxController {
     }
   }
 
-  Future<String> getUniqueId() async {
-    var allDocs = await firestore.collection('products').get();
-    return allDocs.docs.length.toString();
-  }
-
   Future<void> addProduct(
       String name,
       String description,
@@ -435,7 +434,7 @@ class ProductController extends GetxController {
       }
 
       try {
-        String id = await getUniqueId();
+        final String id = firestore.collection('products').doc().id;
         String imageUrl = await uploadToCloudinary(_pickedImage.value!);
         name = name.toLowerCase();
 
@@ -450,7 +449,7 @@ class ProductController extends GetxController {
         );
 
         await firestore.collection('products').doc(id).set(product.toJson());
-        _myProducts.add(product);
+        await fetchProducts(setLoading: false);
 
         Get.back();
          ScaffoldMessenger.of(Get.context!).showSnackBar(
@@ -510,6 +509,7 @@ class ProductController extends GetxController {
 
       _productNameRx.value = product.name;
       _productDescriptionRx.value = product.description;
+      await fetchProducts(setLoading: false);
 
       Get.offAll(ProductOverviewScreen(product: product, controller: controller));
        ScaffoldMessenger.of(Get.context!).showSnackBar(
@@ -533,7 +533,7 @@ class ProductController extends GetxController {
 
   Future<void> deleteProduct(String productId) async {
     await firestore.collection('products').doc(productId).delete();
-  
+    await fetchProducts(setLoading: false);
   }
 
 Future<void> toggleFavoriteStatus(Product product) async {

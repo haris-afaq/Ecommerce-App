@@ -13,16 +13,12 @@ import 'managers/strings_manager.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
-  // Initialize GetStorage first
   await GetStorage.init();
   
-  // Initialize Firebase
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
   
-  // Register controllers AFTER all initializations
-  // Make sure ThemeController doesn't use GetStorage immediately
   Get.put(ThemeController(), permanent: true);
   Get.put(AuthenticateController(), permanent: true);
   
@@ -39,7 +35,6 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Safe way to get controller
     final ThemeController themeController;
     if (Get.isRegistered<ThemeController>()) {
       themeController = Get.find<ThemeController>();
@@ -58,22 +53,4 @@ class MyApp extends StatelessWidget {
     );
   }
 }
-// class MyApp extends StatelessWidget {
-//   MyApp({super.key});
 
-//   final themeController = Get.find<ThemeController>();
-
-//   @override
-//   Widget build(BuildContext context) {
-//     return GetMaterialApp(
-//       title: StringsManager.appName,
-//       debugShowCheckedModeBanner: false,
-//       smartManagement: SmartManagement.full,
-//       initialRoute: AppRoutes.splash,
-//       getPages: AppPages.pages,
-//       theme: ThemeData.light(),
-//       darkTheme: ThemeData.dark(),
-//       themeMode: themeController.themeMode,
-//     );
-//   }
-// }

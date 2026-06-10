@@ -12,9 +12,9 @@ class InventoryController extends GetxController {
   void onInit() {
     super.onInit();
     firestore.collection('products').snapshots().listen((querySnapshot) {
-      _products.value = querySnapshot.docs
-          .map((doc) => Product.fromSnap(doc))
-          .toList(growable: false);
+      _products.assignAll(
+        querySnapshot.docs.map((doc) => Product.fromSnap(doc)).toList(),
+      );
     });
   }
 
@@ -24,7 +24,8 @@ class InventoryController extends GetxController {
       var productDoc = await productDocRef.get();
 
       if (productDoc.exists) {
-        var currentStockQuantity = productDoc.data()?['stockQuantity'] ?? 0;
+        final currentStockQuantity =
+            (productDoc.data()?['stockQuantity'] as num?)?.toInt() ?? 0;
         if (currentStockQuantity > 0) {
           await productDocRef.update({
             'stockQuantity': currentStockQuantity - 1,
@@ -57,10 +58,11 @@ class InventoryController extends GetxController {
   }
 
   int getProductStockQuantity(String productId) {
-    final product = _products.firstWhere(
-      (product) => product.id == productId,
-    );
-
-    return product.stockQuantity;
+    for (final product in _products) {
+      if (product.id == productId) {
+        return product.stockQuantity;
+      }
+    }
+    return 0;
   }
 }
