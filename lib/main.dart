@@ -5,6 +5,7 @@ import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:untitled/controllers/auth_controller.dart';
 import 'package:untitled/controllers/theme_controller.dart';
+import 'package:untitled/firebase_options.dart';
 import 'package:untitled/routes/app_pages.dart';
 import 'package:untitled/routes/app_routes.dart';
 import 'managers/strings_manager.dart';
@@ -16,7 +17,9 @@ Future<void> main() async {
   await GetStorage.init();
   
   // Initialize Firebase
-  await Firebase.initializeApp();
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
   
   // Register controllers AFTER all initializations
   // Make sure ThemeController doesn't use GetStorage immediately
