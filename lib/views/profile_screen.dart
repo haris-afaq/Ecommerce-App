@@ -60,17 +60,17 @@ class ProfileScreen extends StatelessWidget {
                         backgroundColor: ColorsManager.backgroundColor,
                       ),
                     ),
-                    Positioned(
-                      bottom: -10,
-                      left: 80,
-                      child: IconButton(
-                        onPressed: () => profileController.pickImage(),
-                        icon: const Icon(
-                          Icons.add_a_photo,
-                          color: ColorsManager.secondaryColor,
-                        ),
-                      ),
-                    ),
+                    // Positioned(
+                    //   bottom: -10,
+                    //   left: 80,
+                    //   child: IconButton(
+                    //     onPressed: () => profileController.pickImage(),
+                    //     icon: const Icon(
+                    //       Icons.add_a_photo,
+                    //       color: ColorsManager.secondaryColor,
+                    //     ),
+                    //   ),
+                    // ),
                   ],
                 ),
                 const SizedBox(

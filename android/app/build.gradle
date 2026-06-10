@@ -33,9 +33,17 @@ android {
     }
 
     buildTypes {
-        release {
-            signingConfig signingConfigs.debug
+         release {
+              signingConfig signingConfigs.debug
+            minifyEnabled false  // Temporarily disable minification
+            shrinkResources false  // Temporarily disable resource shrinking
+            // signingConfig signingConfigs.debug
+            // minifyEnabled true
+            // proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
+        // release {
+        //     signingConfig signingConfigs.debug
+        // }
     }
 }
 

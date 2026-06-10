@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../managers/firebase_manager.dart';
@@ -58,9 +59,13 @@ class CartController extends GetxController {
     }
     _total.value = total;
   }
-
   Future<void> addToCart(
-      String productId, String name, String price, String ownerId) async {
+  String productId,
+  String name,
+  String price,
+  String ownerId,
+) async {
+  try {
     var newItem = CartItem(
       id: DateTime.now().toString(),
       name: name,
@@ -72,11 +77,13 @@ class CartController extends GetxController {
 
     var userDocRef =
         firestore.collection('cartItems').doc(firebaseAuth.currentUser!.uid);
+
     var userDoc = await userDocRef.get();
 
     if (userDoc.exists) {
       var cartItems =
           List<Map<String, dynamic>>.from(userDoc.data()?['items'] ?? []);
+
       var existingItemIndex =
           cartItems.indexWhere((item) => item['productId'] == productId);
 
@@ -92,9 +99,56 @@ class CartController extends GetxController {
         'items': [newItem.toJson()]
       });
     }
+    if (Get.context != null) {
+  ScaffoldMessenger.of(Get.context!).showSnackBar(
+    const SnackBar(
+      content: Text('Item added to cart.'),
+    ),
+  );
+}
 
-    Get.snackbar('Success!', 'Item added to cart.');
+    // Get.snackbar('Success!', 'Item added to cart.');
+  } catch (e, stackTrace) {
+    print('ADD TO CART ERROR: $e');
+    print(stackTrace);
   }
+}
+  // Future<void> addToCart(
+  //     String productId, String name, String price, String ownerId) async {
+  //   var newItem = CartItem(
+  //     id: DateTime.now().toString(),
+  //     name: name,
+  //     quantity: 1,
+  //     price: double.parse(price),
+  //     productId: productId,
+  //     ownerId: ownerId,
+  //   );
+
+  //   var userDocRef =
+  //       firestore.collection('cartItems').doc(firebaseAuth.currentUser!.uid);
+  //   var userDoc = await userDocRef.get();
+
+  //   if (userDoc.exists) {
+  //     var cartItems =
+  //         List<Map<String, dynamic>>.from(userDoc.data()?['items'] ?? []);
+  //     var existingItemIndex =
+  //         cartItems.indexWhere((item) => item['productId'] == productId);
+
+  //     if (existingItemIndex != -1) {
+  //       cartItems[existingItemIndex]['quantity'] += 1;
+  //     } else {
+  //       cartItems.add(newItem.toJson());
+  //     }
+
+  //     await userDocRef.update({'items': cartItems});
+  //   } else {
+  //     await userDocRef.set({
+  //       'items': [newItem.toJson()]
+  //     });
+  //   }
+
+  //   Get.snackbar('Success!', 'Item added to cart.');
+  // }
 
   void clear() {
     _total.value = 0;
@@ -115,7 +169,14 @@ class CartController extends GetxController {
       if (existingItemIndex != -1) {
         cartItems.removeAt(existingItemIndex);
         await userDocRef.update({'items': cartItems});
-        Get.snackbar('Success!', 'Item removed from cart.');
+        // Get.snackbar('Success!', 'Item removed from cart.');
+        if (Get.context != null) {
+  ScaffoldMessenger.of(Get.context!).showSnackBar(
+    const SnackBar(
+      content: Text('Item removed from cart.'),
+    ),
+  );
+}
       } else {
         Get.snackbar('Error!', 'Item not found in cart.');
       }

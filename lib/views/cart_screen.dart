@@ -12,8 +12,17 @@ class CartScreen extends StatelessWidget {
   static const String routeName = '/cartScreen';
 
   final AuthenticateController authController;
-  final CartController cartController = Get.put(CartController());
-  final OrderController orderController = Get.put(OrderController());
+  // final CartController cartController = Get.put(CartController());
+  // final OrderController orderController = Get.put(OrderController());
+  final CartController cartController =
+    Get.isRegistered<CartController>()
+        ? Get.find<CartController>()
+        : Get.put(CartController(), permanent: true);
+
+final OrderController orderController =
+    Get.isRegistered<OrderController>()
+        ? Get.find<OrderController>()
+        : Get.put(OrderController(), permanent: true);
 
   @override
   Widget build(BuildContext context) {
@@ -129,11 +138,21 @@ class CartScreen extends StatelessWidget {
                   controller.cartItems, controller.total);
               controller.clear();
             } else {
-              Get.snackbar(
-                'Failed!',
-                'Add items first to place an order.',
-              );
-            }
+  if (ScaffoldMessenger.maybeOf(context) != null) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Add items first to place an order.'),
+      ),
+    );
+  }
+}
+            
+            //  else {
+            //   Get.snackbar(
+            //     'Failed!',
+            //     'Add items first to place an order.',
+            //   );
+            // }
           },
           style: ButtonStyle(
             foregroundColor:

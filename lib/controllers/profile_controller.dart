@@ -3,8 +3,6 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_storage/firebase_storage.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 import '../managers/firebase_manager.dart';
@@ -75,32 +73,63 @@ class ProfileController extends GetxController {
     update();
   }
 
-  void pickImage() async {
-    final pickedImage =
-        await ImagePicker().pickImage(source: ImageSource.gallery);
-    _pickedImage.value = File(pickedImage!.path);
-    String downloadUrl = await _uploadToStorage(_pickedImage.value!);
-    await firestore
-        .collection('users')
-        .doc(_uid.value)
-        .update({'profilePhoto': downloadUrl}).whenComplete(() {
-      Get.snackbar('Profile Picture',
-          'You have successfully selected your profile picture.');
-    });
-    update();
-  }
 
-  Future<String> _uploadToStorage(File image) async {
-    Reference ref = firebaseStorage
-        .ref()
-        .child('profilePics')
-        .child(firebaseAuth.currentUser!.uid);
+//   void pickImage() async {
+//   final pickedImage =
+//       await ImagePicker().pickImage(source: ImageSource.gallery);
 
-    UploadTask uploadTask = ref.putFile(image);
-    TaskSnapshot snap = await uploadTask;
-    String downloadUrl = await snap.ref.getDownloadURL();
-    return downloadUrl;
-  }
+//   if (pickedImage == null) return;
+
+//   _pickedImage.value = File(pickedImage.path);
+
+//   String downloadUrl =
+//       await _uploadToStorage(_pickedImage.value!);
+
+//   await firestore
+//       .collection('users')
+//       .doc(_uid.value)
+//       .update({
+//     'profilePhoto': downloadUrl,
+//   });
+
+//   if (Get.context != null) {
+//     ScaffoldMessenger.of(Get.context!).showSnackBar(
+//       const SnackBar(
+//         content: Text('Profile picture updated'),
+//       ),
+//     );
+//   }
+
+//   update();
+// }
+
+  // void pickImage() async {
+  //   final pickedImage =
+  //       await ImagePicker().pickImage(source: ImageSource.gallery);
+  //   _pickedImage.value = File(pickedImage!.path);
+  //   String downloadUrl = await _uploadToStorage(_pickedImage.value!);
+  //   await firestore
+  //       .collection('users')
+  //       .doc(_uid.value)
+  //       .update({'profilePhoto': downloadUrl}).whenComplete(() {
+  //     Get.snackbar('Profile Picture',
+  //         'You have successfully selected your profile picture.');
+  //   });
+  //   update();
+  // }
+
+
+  // Future<String> _uploadToStorage(File image) async {
+  //   Reference ref = firebaseStorage
+  //       .ref()
+  //       .child('profilePics')
+  //       .child(firebaseAuth.currentUser!.uid);
+
+  //   UploadTask uploadTask = ref.putFile(image);
+  //   TaskSnapshot snap = await uploadTask;
+  //   String downloadUrl = await snap.ref.getDownloadURL();
+  //   return downloadUrl;
+  // }
 
   void changePassword(
       String currentPass, String newPass, String newRePass) async {
@@ -113,18 +142,33 @@ class ProfileController extends GetxController {
               email: firebaseAuth.currentUser!.email!, password: currentPass);
           await firebaseAuth.currentUser!.reauthenticateWithCredential(cred);
           await firebaseAuth.currentUser!.updatePassword(newPass);
-          Get.snackbar('Password updated successfully!',
-              'You have successfully updated your password.');
+           ScaffoldMessenger.of(Get.context!).showSnackBar(
+      const SnackBar(
+        content: Text('Password Changed Successfully...'),
+      ),
+    );
+          // Get.snackbar('Password updated successfully!',
+          //     'You have successfully updated your password.');
           Get.back();
           toggleLoading();
         } catch (error) {
           toggleLoading();
-          Get.snackbar('Password updated failed!', error.toString());
+           ScaffoldMessenger.of(Get.context!).showSnackBar(
+       SnackBar(
+        content: Text("Password updated failed!"),
+      ),
+    );
+          // Get.snackbar('Password updated failed!', error.toString());
         }
       }
     } else {
       toggleLoading();
-      Get.snackbar('Error!', 'Password does not match.');
+       ScaffoldMessenger.of(Get.context!).showSnackBar(
+      const SnackBar(
+        content: Text('Password does not match.'),
+      ),
+    );
+      // Get.snackbar('Error!', 'Password does not match.');
     }
     resetFields();
   }
@@ -144,8 +188,13 @@ class ProfileController extends GetxController {
         _phoneRx.value = phone;
         _addressRx.value = address;
         Get.back();
-        Get.snackbar('User details updated!',
-            'You have successfully updated user details!');
+         ScaffoldMessenger.of(Get.context!).showSnackBar(
+      const SnackBar(
+        content: Text('You have successfully updated your profile details!'),
+      ),
+    );
+        // Get.snackbar('User details updated!',
+        //     'You have successfully updated user details!');
       });
     }
   }

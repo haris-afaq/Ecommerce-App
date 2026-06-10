@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:untitled/routes/app_routes.dart';
 
 import '../local/local_storage.dart';
 import '../models/user_model.dart' as model;
@@ -27,95 +28,134 @@ class AuthenticateController extends GetxController with CacheManager {
     isObscure.value = !isObscure.value;
   }
 
-  void checkLoginStatus() {
+ Future<void> checkLoginStatus() async {
     final userType = getUserType();
 
     if (userType == null || userType.isEmpty) {
-      Get.off(const LoginScreen());
+      Get.offAll(() => const LoginScreen());
+      return;
+    }
+
+    if (userType == "Seller") {
+      Get.offAll(() => const SellerHomeScreen());
     } else {
-      if (userType == "Seller") {
-        Get.offAll(const SellerHomeScreen());
-      } else {
-        Get.offAll(const BuyerHomeScreen());
-      }
+      Get.offAll(() => const BuyerHomeScreen());
     }
   }
 
-  void toggleLoading({bool showMessage = false, String message = ''}) {
+  void toggleLoading() {
     isLoading.value = !isLoading.value;
-    if (showMessage) {
-      Utils.showSnackBar(
-        message,
-        isSuccess: false,
-      );
-    }
   }
+  // void checkLoginStatus() {
+  //   final userType = getUserType();
+
+  //   if (userType == null || userType.isEmpty) {
+  //     Get.off(const LoginScreen());
+  //   } else {
+  //     if (userType == "Seller") {
+  //       Get.offAll(const SellerHomeScreen());
+  //     } else {
+  //       Get.offAll(const BuyerHomeScreen());
+  //     }
+  //   }
+  // }
+
+  // void toggleLoading({bool showMessage = false, String message = ''}) {
+  //   isLoading.value = !isLoading.value;
+  //   if (showMessage) {
+  //     Utils.showSnackBar(
+  //       message,
+  //       isSuccess: false,
+  //     );
+  //   }
+  // }
 
   void resetPassword(String email) async {
     try {
       await firebaseAuth.sendPasswordResetEmail(email: email);
-      Get.snackbar(
-        'Success',
-        'Password reset email is send successfully.',
-      );
+       ScaffoldMessenger.of(Get.context!).showSnackBar(
+      const SnackBar(
+        content: Text('Password resey email is sent successfully...'),
+      ),
+    );
+      // Get.snackbar(
+      //   'Success',
+      //   'Password reset email is send successfully.',
+      // );
     } catch (err) {
-      Get.snackbar(
-        'Error',
-        err.toString(),
-      );
+       ScaffoldMessenger.of(Get.context!).showSnackBar(
+      const SnackBar(
+        content: Text("An error occured while sending reset email please try again..."),
+      ),
+    );
+      // Get.snackbar(
+      //   'Error',
+      //   err.toString(),
+      // );
     }
   }
 
   Future<bool> signUpUser({
-    required String email,
-    required String password,
-    required String name,
-    required String phone,
-    required String address,
-  }) async {
-    try {
-      if (signupFormKey.currentState!.validate()) {
-        signupFormKey.currentState!.save();
-        toggleLoading();
-        UserCredential cred = await firebaseAuth.createUserWithEmailAndPassword(
-          email: email,
-          password: password,
-        );
-        await firebaseAuth.currentUser!.sendEmailVerification();
+  required String email,
+  required String password,
+  required String name,
+  required String phone,
+  required String address,
+}) async {
+  try {
+    print("SIGNUP START");
 
-        model.User user = model.User(
-          name: name,
-          uid: cred.user!.uid,
-          phone: phone,
-          email: email,
-          profilePhoto: "",
-          address: address,
-        );
+    if (signupFormKey.currentState!.validate()) {
+      signupFormKey.currentState!.save();
 
-        await firestore
-            .collection("users")
-            .doc(cred.user!.uid)
-            .set(user.toJson());
-
-        removeToken();
-        toggleLoading();
-
-        Get.snackbar(
-          'Account created successfully!',
-          'Please verify account to proceed.',
-        );
-        return true;
-      }
-      return false;
-    } catch (e) {
       toggleLoading();
-      Get.snackbar(
-        'Error Logging in',
-        e.toString(),
+
+      UserCredential cred =
+          await firebaseAuth.createUserWithEmailAndPassword(
+        email: email,
+        password: password,
       );
-      return false;
+
+      print("USER CREATED: ${cred.user?.uid}");
+
+      await cred.user!.sendEmailVerification();
+
+      print("EMAIL VERIFICATION SENT");
+
+      model.User user = model.User(
+        name: name,
+        uid: cred.user!.uid,
+        phone: phone,
+        email: email,
+        profilePhoto: "",
+        address: address,
+      );
+
+      await firestore
+          .collection("users")
+          .doc(cred.user!.uid)
+          .set(user.toJson());
+
+      print("FIRESTORE USER CREATED");
+
+      toggleLoading();
+
+      return true;
     }
+
+    return false;
+  } catch (e, stackTrace) {
+    print("SIGNUP ERROR: $e");
+    print(stackTrace);
+
+    if (isLoading.value) {
+      toggleLoading();
+    }
+
+    return false;
   }
+}
+
 
   Future<bool> login(String email, String password, String userType) async {
     try {
@@ -137,28 +177,43 @@ class AuthenticateController extends GetxController with CacheManager {
             return true;
           } else {
             toggleLoading();
-            Get.snackbar(
-              'Error Logging in',
-              'Please verify your email to login.',
-            );
+             ScaffoldMessenger.of(Get.context!).showSnackBar(
+      const SnackBar(
+        content: Text('Please verify your account before logging in...'),
+      ),
+    );
+            // Get.snackbar(
+            //   'Error Logging in',
+            //   'Please verify your email to login.',
+            // );
             return true;
           }
         } else {
           toggleLoading();
-          Get.snackbar(
-            'Error Logging in',
-            'Invalid email or password.',
-          );
+           ScaffoldMessenger.of(Get.context!).showSnackBar(
+      const SnackBar(
+        content: Text('Invalid credentials...'),
+      ),
+    );
+          // Get.snackbar(
+          //   'Error Logging in',
+          //   'Invalid email or password.',
+          // );
           return false;
         }
       }
       return false;
     } catch (err) {
       toggleLoading();
-      Get.snackbar(
-        'Error Logging in',
-        err.toString(),
-      );
+       ScaffoldMessenger.of(Get.context!).showSnackBar(
+      const SnackBar(
+        content: Text('Error logging in...'),
+      ),
+    );
+      // Get.snackbar(
+      //   'Error Logging in',
+      //   err.toString(),
+      // );
       return false;
     }
   }

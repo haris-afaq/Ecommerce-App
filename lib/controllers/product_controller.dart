@@ -354,7 +354,12 @@ class ProductController extends GetxController {
     final pickedImage = await ImagePicker().pickImage(source: ImageSource.gallery);
     if (pickedImage != null) {
       _pickedImage.value = File(pickedImage.path);
-      Get.snackbar('Product Picture Added!', 'You have successfully added your product picture!');
+       ScaffoldMessenger.of(Get.context!).showSnackBar(
+      const SnackBar(
+        content: Text('You have successfully added your product picture!'),
+      ),
+    );
+      // Get.snackbar('Product Picture Added!', 'You have successfully added your product picture!');
       update();
     }
   }
@@ -406,7 +411,12 @@ class ProductController extends GetxController {
       addFormKey.currentState!.save();
 
       if (_pickedImage.value == null) {
-        Get.snackbar('Error', 'Please pick an image first');
+         ScaffoldMessenger.of(Get.context!).showSnackBar(
+      const SnackBar(
+        content: Text('Please pick an image first'),
+      ),
+    );
+        // Get.snackbar('Error', 'Please pick an image first');
         return;
       }
 
@@ -414,7 +424,12 @@ class ProductController extends GetxController {
 
       final user = firebaseAuth.currentUser;
       if (user == null) {
-        Get.snackbar('Error', 'User not logged in');
+         ScaffoldMessenger.of(Get.context!).showSnackBar(
+      const SnackBar(
+        content: Text('user not logged in'),
+      ),
+    );
+        // Get.snackbar('Error', 'User not logged in');
         toggleLoading();
         return;
       }
@@ -438,7 +453,12 @@ class ProductController extends GetxController {
         _myProducts.add(product);
 
         Get.back();
-        Get.snackbar('Success!', 'Product added successfully.');
+         ScaffoldMessenger.of(Get.context!).showSnackBar(
+      const SnackBar(
+        content: Text('Product added successfully'),
+      ),
+    );
+        // Get.snackbar('Success!', 'Product added successfully.');
         resetFields();
       } catch (e) {
         Get.snackbar('Error', e.toString());
@@ -462,7 +482,12 @@ class ProductController extends GetxController {
     try {
       final user = firebaseAuth.currentUser;
       if (user == null) {
-        Get.snackbar('Error', 'User not logged in');
+         ScaffoldMessenger.of(Get.context!).showSnackBar(
+      const SnackBar(
+        content: Text('User not logged in'),
+      ),
+    );
+        // Get.snackbar('Error', 'User not logged in');
         toggleLoading();
         return;
       }
@@ -487,10 +512,20 @@ class ProductController extends GetxController {
       _productDescriptionRx.value = product.description;
 
       Get.offAll(ProductOverviewScreen(product: product, controller: controller));
-      Get.snackbar('Product Updated', 'You have successfully updated your product.');
+       ScaffoldMessenger.of(Get.context!).showSnackBar(
+      const SnackBar(
+        content: Text('You have successfully updated your product'),
+      ),
+    );
+      // Get.snackbar('Product Updated', 'You have successfully updated your product.');
       resetFields();
     } catch (e) {
-      Get.snackbar('Error', e.toString());
+       ScaffoldMessenger.of(Get.context!).showSnackBar(
+      const SnackBar(
+        content: Text('Error occured while uploading product'),
+      ),
+    );
+      // Get.snackbar('Error', e.toString());
     } finally {
       toggleLoading();
     }
@@ -498,31 +533,84 @@ class ProductController extends GetxController {
 
   Future<void> deleteProduct(String productId) async {
     await firestore.collection('products').doc(productId).delete();
-    // Note: Cloudinary image deletion requires storing public_id
+  
   }
 
-  Future<void> toggleFavoriteStatus(Product product) async {
-    try {
-      final userId = firebaseAuth.currentUser!.uid;
-      final userDocRef = firestore.collection('favorites').doc(userId);
-      final userDoc = await userDocRef.get();
+Future<void> toggleFavoriteStatus(Product product) async {
+  try {
+    final user = firebaseAuth.currentUser;
 
-      List<dynamic> productIds = userDoc.data()?['productIds'] ?? [];
+    if (user == null) {
+      return;
+    }
 
-      if (productIds.contains(product.id)) {
-        productIds.remove(product.id);
-        Get.snackbar('Removed', 'Product removed from favorites.');
-      } else {
-        productIds.add(product.id);
-        Get.snackbar('Added', 'Product added to favorites.');
-      }
+    final userDocRef =
+        firestore.collection('favorites').doc(user.uid);
 
-      await userDocRef.set({'productIds': productIds});
-      fetchFavoriteProducts(userId);
-    } catch (error) {
-      Get.snackbar('Error', error.toString());
+    final userDoc = await userDocRef.get();
+
+    List<dynamic> productIds =
+        List<dynamic>.from(userDoc.data()?['productIds'] ?? []);
+
+    String message = '';
+
+    if (productIds.contains(product.id)) {
+      productIds.remove(product.id);
+      message = 'Product removed from favorites.';
+    } else {
+      productIds.add(product.id);
+      message = 'Product added to favorites.';
+    }
+
+    await userDocRef.set({
+      'productIds': productIds,
+    });
+
+    await fetchFavoriteProducts(user.uid);
+
+    if (Get.context != null) {
+      ScaffoldMessenger.of(Get.context!).hideCurrentSnackBar();
+
+      ScaffoldMessenger.of(Get.context!).showSnackBar(
+        SnackBar(
+          content: Text(message),
+        ),
+      );
+    }
+  } catch (error) {
+    debugPrint('Favorite Error: $error');
+
+    if (Get.context != null) {
+      ScaffoldMessenger.of(Get.context!).showSnackBar(
+        SnackBar(
+          content: Text(error.toString()),
+        ),
+      );
     }
   }
+}
+  // Future<void> toggleFavoriteStatus(Product product) async {
+  //   try {
+  //     final userId = firebaseAuth.currentUser!.uid;
+  //     final userDocRef = firestore.collection('favorites').doc(userId);
+  //     final userDoc = await userDocRef.get();
+
+  //     List<dynamic> productIds = userDoc.data()?['productIds'] ?? [];
+
+  //     if (productIds.contains(product.id)) {
+  //       productIds.remove(product.id);
+  //       Get.snackbar('Removed', 'Product removed from favorites.');
+  //     } else {
+  //       productIds.add(product.id);
+  //       Get.snackbar('Added', 'Product added to favorites.');
+  //     }
+
+  //     await userDocRef.set({'productIds': productIds});
+  //     fetchFavoriteProducts(userId);
+  //   } catch (error) {
+  //     Get.snackbar('Error', error.toString());
+  //   }
+  // }
 
   Future<bool> getFavoriteStatus(String productId) async {
     try {
@@ -533,7 +621,12 @@ class ProductController extends GetxController {
       final productIds = userDoc.data()?['productIds'] ?? [];
       return productIds.contains(productId);
     } catch (error) {
-      Get.snackbar('Error', error.toString());
+       ScaffoldMessenger.of(Get.context!).showSnackBar(
+      const SnackBar(
+        content: Text('Something went wrong'),
+      ),
+    );
+      // Get.snackbar('Error', error.toString());
       return false;
     }
   }
@@ -557,7 +650,12 @@ class ProductController extends GetxController {
       }
       return [];
     } catch (error) {
-      Get.snackbar('Error', error.toString());
+       ScaffoldMessenger.of(Get.context!).showSnackBar(
+      const SnackBar(
+        content: Text('An error occured'),
+      ),
+    );
+      // Get.snackbar('Error', error.toString());
       return [];
     } finally {
       isLoading.value = false;

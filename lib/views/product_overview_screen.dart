@@ -23,10 +23,20 @@ class ProductOverviewScreen extends StatelessWidget {
   final Product product;
   final ProductController controller;
   final bool isFav;
+  final authController = Get.find<AuthenticateController>();
 
-  final authController = Get.put(AuthenticateController());
-  final cartController = Get.put(CartController());
-  final inventoryController = Get.put(InventoryController());
+final cartController =
+    Get.isRegistered<CartController>()
+        ? Get.find<CartController>()
+        : Get.put(CartController(), permanent: true);
+
+final inventoryController =
+    Get.isRegistered<InventoryController>()
+        ? Get.find<InventoryController>()
+        : Get.put(InventoryController(), permanent: true);
+  // final authController = Get.put(AuthenticateController());
+  // final cartController = Get.put(CartController());
+  // final inventoryController = Get.put(InventoryController());
 
   @override
   Widget build(BuildContext context) {

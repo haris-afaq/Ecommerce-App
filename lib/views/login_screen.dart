@@ -176,8 +176,13 @@ class LoginScreen extends StatelessWidget {
                           controller.resetPassword(
                               controller.emailController.text.trim());
                         } else {
-                          Get.snackbar('Invalid',
-                              'Please provide email first to reset password.');
+                           ScaffoldMessenger.of(Get.context!).showSnackBar(
+      const SnackBar(
+        content: Text('Please provide your email first to reset your password...'),
+      ),
+    );
+                          // Get.snackbar('Invalid',
+                          //     'Please provide email first to reset password.');
                         }
                       },
                       child: Container(
@@ -295,10 +300,15 @@ class LoginScreen extends StatelessWidget {
                   controller.logout();
                   Get.offAll(const LoginScreen());
                 } catch (e) {
-                  Get.snackbar(
-                    'Error',
-                    'Failed to send email verification: $e',
-                  );
+                   ScaffoldMessenger.of(Get.context!).showSnackBar(
+      const SnackBar(
+        content: Text('Failed to send verification email...'),
+      ),
+    );
+                  // Get.snackbar(
+                  //   'Error',
+                  //   'Failed to send email verification: $e',
+                  // );
                 }
               },
               child: const Txt(

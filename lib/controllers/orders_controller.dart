@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
@@ -57,81 +58,173 @@ class OrderController extends GetxController {
         .doc(firebaseAuth.currentUser!.uid)
         .get();
     _user.value = userDoc.data() as Map<String, dynamic>;
+
   }
+Future<void> placeOrder(
+  List<CartItem> cartItems,
+  double totalAmount,
+) async {
+  try {
+    final userId = firebaseAuth.currentUser!.uid;
 
-  Future<void> placeOrder(List<CartItem> cartItems, double totalAmount) async {
-    try {
-      final userId = firebaseAuth.currentUser!.uid;
+    final Map<String, List<CartItem>> ordersByOwner = {};
 
-      final Map<String, List<CartItem>> ordersByOwner = {};
+    await getUserData();
 
-      await getUserData();
+    final bUser = User.fromMap(user);
 
-      final bUser = User.fromMap(user);
+    final orderItem = OrderItem(
+      id: DateTime.now().toString(),
+      amount: totalAmount,
+      products: cartItems,
+      dateTime: DateTime.now(),
+    );
 
-      var orderItem = OrderItem(
+    await firestore
+        .collection('orders')
+        .doc(userId)
+        .collection('user_orders')
+        .doc(orderItem.id)
+        .set(orderItem.toJson());
+
+    for (final cartItem in cartItems) {
+      final ownerId = cartItem.ownerId;
+
+      if (ordersByOwner.containsKey(ownerId)) {
+        ordersByOwner[ownerId]!.add(cartItem);
+      } else {
+        ordersByOwner[ownerId] = [cartItem];
+      }
+    }
+
+    for (final ownerId in ordersByOwner.keys) {
+      final orderItems = ordersByOwner[ownerId]!;
+
+      final sellerOrder = OrderItem(
         id: DateTime.now().toString(),
         amount: totalAmount,
-        products: cartItems,
+        products: orderItems,
         dateTime: DateTime.now(),
       );
 
       await firestore
-          .collection('orders')
-          .doc(userId)
+          .collection('seller_orders')
+          .doc(ownerId)
           .collection('user_orders')
-          .doc(orderItem.id)
-          .set(orderItem.toJson());
+          .doc(sellerOrder.id)
+          .set({
+        ...sellerOrder.toJson(),
+        'buyerInfo': bUser.toJson(),
+      });
+    }
 
-      for (var cartItem in cartItems) {
-        final ownerId = cartItem.ownerId;
+    await firestore.collection('cartItems').doc(userId).delete();
 
-        if (ordersByOwner.containsKey(ownerId)) {
-          ordersByOwner[ownerId]!.add(cartItem);
-        } else {
-          ordersByOwner[ownerId] = [cartItem];
-        }
-      }
+    for (final cartItem in cartItems) {
+      await inventoryController
+          .decrementStockQuantity(cartItem.productId);
+    }
 
-      for (var ownerId in ordersByOwner.keys) {
-        final orderItems = ordersByOwner[ownerId]!;
-        final orderItem = OrderItem(
-          id: DateTime.now().toString(),
-          amount: totalAmount,
-          products: orderItems,
-          dateTime: DateTime.now(),
+    Utils.dismissLoadingWidget();
+
+    if (Get.context != null) {
+      ScaffoldMessenger.of(Get.context!)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          const SnackBar(
+            content: Text('Order placed successfully.'),
+          ),
         );
+    }
+  } catch (error) {
+    Utils.dismissLoadingWidget();
 
-        await firestore
-            .collection('seller_orders')
-            .doc(ownerId)
-            .collection('user_orders')
-            .doc(orderItem.id)
-            .set({
-          ...orderItem.toJson(),
-          'buyerInfo': bUser.toJson(),
-        });
-      }
-
-      await firestore.collection('cartItems').doc(userId).delete();
-
-      for (var cartItem in cartItems) {
-        await inventoryController.decrementStockQuantity(cartItem.productId);
-      }
-      Utils.dismissLoadingWidget();
-
-      Get.snackbar(
-        'Success!',
-        'Order placed successfully.',
-      );
-    } catch (error) {
-      Utils.dismissLoadingWidget();
-      Get.snackbar(
-        'Failure!',
-        error.toString(),
-      );
+    if (Get.context != null) {
+      ScaffoldMessenger.of(Get.context!)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          SnackBar(
+            content: Text(error.toString()),
+          ),
+        );
     }
   }
+}
+
+
+  // Future<void> placeOrder(List<CartItem> cartItems, double totalAmount) async {
+  //   try {
+  //     final userId = firebaseAuth.currentUser!.uid;
+
+  //     final Map<String, List<CartItem>> ordersByOwner = {};
+
+  //     await getUserData();
+
+  //     final bUser = User.fromMap(user);
+
+  //     var orderItem = OrderItem(
+  //       id: DateTime.now().toString(),
+  //       amount: totalAmount,
+  //       products: cartItems,
+  //       dateTime: DateTime.now(),
+  //     );
+
+  //     await firestore
+  //         .collection('orders')
+  //         .doc(userId)
+  //         .collection('user_orders')
+  //         .doc(orderItem.id)
+  //         .set(orderItem.toJson());
+
+  //     for (var cartItem in cartItems) {
+  //       final ownerId = cartItem.ownerId;
+
+  //       if (ordersByOwner.containsKey(ownerId)) {
+  //         ordersByOwner[ownerId]!.add(cartItem);
+  //       } else {
+  //         ordersByOwner[ownerId] = [cartItem];
+  //       }
+  //     }
+
+  //     for (var ownerId in ordersByOwner.keys) {
+  //       final orderItems = ordersByOwner[ownerId]!;
+  //       final orderItem = OrderItem(
+  //         id: DateTime.now().toString(),
+  //         amount: totalAmount,
+  //         products: orderItems,
+  //         dateTime: DateTime.now(),
+  //       );
+
+  //       await firestore
+  //           .collection('seller_orders')
+  //           .doc(ownerId)
+  //           .collection('user_orders')
+  //           .doc(orderItem.id)
+  //           .set({
+  //         ...orderItem.toJson(),
+  //         'buyerInfo': bUser.toJson(),
+  //       });
+  //     }
+
+  //     await firestore.collection('cartItems').doc(userId).delete();
+
+  //     for (var cartItem in cartItems) {
+  //       await inventoryController.decrementStockQuantity(cartItem.productId);
+  //     }
+  //     Utils.dismissLoadingWidget();
+
+  //     Get.snackbar(
+  //       'Success!',
+  //       'Order placed successfully.',
+  //     );
+  //   } catch (error) {
+  //     Utils.dismissLoadingWidget();
+  //     Get.snackbar(
+  //       'Failure!',
+  //       error.toString(),
+  //     );
+  //   }
+  // }
 
   Future<void> fetchOrdersByOwner() async {
     final userId = firebaseAuth.currentUser!.uid;

@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../managers/firebase_manager.dart';
@@ -29,13 +30,29 @@ class InventoryController extends GetxController {
             'stockQuantity': currentStockQuantity - 1,
           });
         } else {
-          Get.snackbar('Error!', 'Stock quantity is already zero.');
+           ScaffoldMessenger.of(Get.context!).showSnackBar(
+      const SnackBar(
+        content: Text('Stock qunatity is already zero...'),
+      ),
+    );
+
+          // Get.snackbar('Error!', 'Stock quantity is already zero.');
         }
       } else {
-        Get.snackbar('Error!', 'Product not found.');
+         ScaffoldMessenger.of(Get.context!).showSnackBar(
+      const SnackBar(
+        content: Text('Product not found...'),
+      ),
+    );
+        // Get.snackbar('Error!', 'Product not found.');
       }
     } catch (error) {
-      Get.snackbar('Error!', 'Failed to decrement stock quantity.');
+       ScaffoldMessenger.of(Get.context!).showSnackBar(
+      const SnackBar(
+        content: Text('Failed to decrement stock quantity'),
+      ),
+    );
+      // Get.snackbar('Error!', 'Failed to decrement stock quantity.');
     }
   }
 
